@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/store/cart';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -89,9 +89,23 @@ export default function CheckoutPage() {
     }
   };
 
+  // Handle redirect on client-side only
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push('/panier');
+    }
+  }, [items.length, router]);
+
+  // Show loading state while checking cart
   if (items.length === 0) {
-    router.push('/panier');
-    return null;
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
+          <div className="h-12 bg-gray-200 rounded w-1/3 mb-8"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
