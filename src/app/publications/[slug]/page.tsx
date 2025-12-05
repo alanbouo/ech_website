@@ -102,35 +102,16 @@ export default function BookPage({ params }: BookPageProps) {
             )}
           </div>
 
-          {/* Tabs */}
-          <div className="border-t pt-8 mt-8">
-            <div className="flex gap-6 mb-6">
-              <button className="text-primary font-medium border-b-2 border-primary pb-2">
-                Description
-              </button>
-              <button className="text-gray-500 hover:text-gray-700 pb-2">
-                Avis (0)
-              </button>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Description</h2>
-              <div className="prose prose-gray">
-                {formatText(book.longDescription)}
+          {book.authorNote && (
+            <div className="border-t pt-8 mt-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">
+                Mot de {book.author}
+              </h3>
+              <div className="prose prose-gray italic">
+                {formatText(book.authorNote)}
               </div>
-
-              {book.authorNote && (
-                <>
-                  <h3 className="text-xl font-bold text-gray-800 mt-8 mb-4">
-                    Mot de {book.author}
-                  </h3>
-                  <div className="prose prose-gray italic">
-                    {formatText(book.authorNote)}
-                  </div>
-                </>
-              )}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

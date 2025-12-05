@@ -33,7 +33,16 @@ export default function CheckoutPage() {
   });
 
   const totalPrice = getTotalPrice();
-  const shippingCost = 5.00;
+  
+  // Calcul des frais de livraison
+  const calculateShippingCost = () => {
+    if (customerInfo.country === 'France') {
+      return totalPrice >= 35 ? 0 : 3;
+    }
+    return 10;
+  };
+  
+  const shippingCost = calculateShippingCost();
   const grandTotal = totalPrice + shippingCost;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -248,7 +257,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Livraison</span>
-                  <span>€{shippingCost.toFixed(2)}</span>
+                  <span>{shippingCost === 0 ? 'Gratuit' : `€${shippingCost.toFixed(2)}`}</span>
                 </div>
               </div>
 
