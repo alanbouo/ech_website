@@ -15,8 +15,9 @@ export default function MentionsLegalesPage() {
       <div className="prose prose-gray max-w-none">
         <section className="mb-8">
           <p className="font-semibold">Éditions Cerises d'Hiver</p>
-          <p>13 allée des Marettes</p>
-          <p>38300 Bourgoin Jallieu</p>
+          <p>EI Aländji BOUORAKIMA</p>
+          <p>12 rue de la part-dieu</p>
+          <p>69003 Lyon</p>
           <p>email: contact(arobase)cerises-hiver.com</p>
         </section>
 
@@ -26,7 +27,7 @@ export default function MentionsLegalesPage() {
         </section>
 
         <section className="mb-8">
-          <p>Responsable de la publication : Alàndji Bouorakima</p>
+          <p>Responsable de la publication : Aländji Bouorakima</p>
         </section>
 
         <section className="mb-8">
@@ -34,15 +35,12 @@ export default function MentionsLegalesPage() {
         </section>
 
         <section className="mb-8">
-          <p>Hébergement du site : Vercel Inc.</p>
+          <p>Hébergement du site : Hetzner.com</p>
         </section>
 
         <section className="mb-8">
           <p>
-            Ce site est soumis à la législation française et internationale sur les droits d'auteur. 
-            Tous les droits de reproduction, sur quelque support que ce soit, sont réservés. 
-            La reproduction et l'utilisation du contenu de tout ou partie de ce site autres 
-            qu'individuelles et privées sont interdites, sauf autorisation expresse et préalable de l'éditeur.
+            Ce site est soumis à la législation française et internationale sur les droits d'auteur. Tous les droits de reproduction, sur quelque support que ce soit, sont réservés. La reproduction et l'utilisation du contenu de tout ou partie de ce site autres qu'individuelles et privées sont interdites, sauf autorisation expresse et préalable de l'éditeur.
           </p>
         </section>
       </div>
