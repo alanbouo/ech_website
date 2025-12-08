@@ -49,10 +49,6 @@ export function deletePendingOrder(reference: string): boolean {
 }
 
 export function getPendingOrderByCheckoutId(checkoutId: string): PendingOrder | undefined {
-  for (const order of pendingOrders.values()) {
-    if (order.checkoutId === checkoutId) {
-      return order;
-    }
-  }
-  return undefined;
+  const orders = Array.from(pendingOrders.values());
+  return orders.find(order => order.checkoutId === checkoutId);
 }
