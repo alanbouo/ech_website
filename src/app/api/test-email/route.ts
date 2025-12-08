@@ -8,8 +8,14 @@ export async function GET(request: NextRequest) {
   
   // Require secret key (set TEST_SECRET env var, or use default for testing)
   const testSecret = process.env.TEST_SECRET || 'test-email-secret-2024';
+  
+  console.log('Test email endpoint called');
+  console.log('Received secret:', secret);
+  console.log('Expected secret:', testSecret);
+  console.log('Match?', secret === testSecret);
+  
   if (secret !== testSecret) {
-    return NextResponse.json({ error: 'Invalid or missing secret' }, { status: 403 });
+    return NextResponse.json({ error: 'Invalid or missing secret', received: secret, expected: testSecret }, { status: 403 });
   }
 
   // Mock order data
