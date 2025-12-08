@@ -1,10 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { sendOrderEmails } from '@/lib/email';
 
-// Test endpoint - only available in development
-export async function GET() {
+// Test endpoint - requires secret key in production
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const secret = searchParams.get('secret');
+  
+  // In production, require a secret key
   if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
+    const testSecret = process.env.TEST_SECRET;
+    if (!testSecret || secret !== testSecret) {
+      return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
+    }
   }
 
   // Mock order data
