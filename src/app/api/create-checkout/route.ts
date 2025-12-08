@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { storePendingOrder } from '@/lib/orderStore';
 
 // SumUp API configuration
 const SUMUP_API_URL = 'https://api.sumup.com/v0.1';
@@ -30,7 +31,7 @@ interface CheckoutRequest {
 export async function POST(request: NextRequest) {
   try {
     const body: CheckoutRequest = await request.json();
-    const { items, customerInfo, totalAmount } = body;
+    const { items, customerInfo, totalAmount, shippingCost } = body;
 
     // Get SumUp API key from environment variables
     const sumupApiKey = process.env.SUMUP_API_KEY;
@@ -93,6 +94,17 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Store the pending order for later email sending
+    storePendingOrder({
+      reference: checkoutReference,
+      items,
+      customerInfo,
+      totalAmount,
+      shippingCost,
+      createdAt: new Date(),
+      checkoutId: sumupData.id,
+    });
 
     return NextResponse.json({
       checkoutUrl: sumupData.hosted_checkout_url,

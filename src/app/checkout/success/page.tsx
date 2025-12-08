@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
@@ -10,11 +10,38 @@ function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const reference = searchParams.get('reference');
   const { clearCart } = useCart();
+  const emailSentRef = useRef(false);
 
   useEffect(() => {
     // Clear the cart after successful payment
     clearCart();
   }, [clearCart]);
+
+  useEffect(() => {
+    // Send confirmation emails when the success page loads
+    async function sendConfirmationEmails() {
+      if (!reference || emailSentRef.current) return;
+      
+      emailSentRef.current = true;
+      
+      try {
+        const response = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ reference }),
+        });
+        
+        const data = await response.json();
+        console.log('Email confirmation result:', data);
+      } catch (error) {
+        console.error('Error sending confirmation emails:', error);
+      }
+    }
+
+    sendConfirmationEmails();
+  }, [reference]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-16 text-center">

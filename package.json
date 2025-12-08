@@ -9,10 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "lucide-react": "^0.344.0",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
-    "lucide-react": "^0.344.0",
+    "resend": "^6.5.2",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
