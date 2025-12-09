@@ -261,3 +261,206 @@ export async function sendOrderEmails(orderData: OrderEmailData) {
     merchant: merchantResult,
   };
 }
+
+// ============================================
+// REFUND EMAIL
+// ============================================
+
+interface RefundEmailData {
+  reference: string;
+  customerEmail: string;
+  customerFirstName: string;
+  refundAmount: number;
+  reason?: string;
+}
+
+export async function sendRefundEmail(data: RefundEmailData) {
+  const { reference, customerEmail, customerFirstName, refundAmount, reason } = data;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #E91E63; margin: 0;">Éditions Cerises d'Hiver</h1>
+      </div>
+      
+      <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <h2 style="color: #1976d2; margin-top: 0;">💳 Remboursement effectué</h2>
+        <p>Bonjour ${customerFirstName},</p>
+        <p>Nous vous confirmons que votre remboursement a été effectué.</p>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <table style="width: 100%;">
+          <tr>
+            <td style="padding: 8px 0;"><strong>Référence de commande :</strong></td>
+            <td style="text-align: right;">${reference}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0;"><strong>Montant remboursé :</strong></td>
+            <td style="text-align: right; font-size: 1.2em; color: #1976d2; font-weight: bold;">€${refundAmount.toFixed(2)}</td>
+          </tr>
+        </table>
+      </div>
+
+      ${reason ? `
+      <div style="background: #fff8e1; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <p style="margin: 0;"><strong>Motif :</strong> ${reason}</p>
+      </div>
+      ` : ''}
+
+      <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <p style="margin: 0;">⏱️ <strong>Délai :</strong> Le remboursement apparaîtra sur votre compte bancaire sous 5 à 10 jours ouvrés, selon votre banque.</p>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9em;">
+        <p>Des questions ? Contactez-nous à <a href="mailto:${MERCHANT_EMAIL}" style="color: #E91E63;">${MERCHANT_EMAIL}</a></p>
+        <p>Éditions Cerises d'Hiver</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const { data: emailData, error } = await resend.emails.send({
+      from: `Éditions Cerises d'Hiver <${FROM_EMAIL}>`,
+      to: customerEmail,
+      subject: `Remboursement confirmé - Commande ${reference}`,
+      html,
+    });
+
+    if (error) {
+      console.error('Error sending refund email:', error);
+      return { success: false, error };
+    }
+
+    console.log('Refund email sent:', emailData);
+    return { success: true, data: emailData };
+  } catch (error) {
+    console.error('Error sending refund email:', error);
+    return { success: false, error };
+  }
+}
+
+// ============================================
+// SHIPPING / TRACKING EMAIL
+// ============================================
+
+interface ShippingEmailData {
+  reference: string;
+  customerEmail: string;
+  customerFirstName: string;
+  trackingNumber: string;
+  carrier: string; // e.g., "La Poste", "Colissimo", "Mondial Relay"
+  trackingUrl?: string;
+  estimatedDelivery?: string; // e.g., "12-14 décembre 2025"
+}
+
+export async function sendShippingEmail(data: ShippingEmailData) {
+  const { reference, customerEmail, customerFirstName, trackingNumber, carrier, trackingUrl, estimatedDelivery } = data;
+
+  // Default tracking URLs for common carriers
+  const getTrackingUrl = () => {
+    if (trackingUrl) return trackingUrl;
+    
+    const carrierLower = carrier.toLowerCase();
+    if (carrierLower.includes('colissimo') || carrierLower.includes('la poste')) {
+      return `https://www.laposte.fr/outils/suivre-vos-envois?code=${trackingNumber}`;
+    }
+    if (carrierLower.includes('mondial relay')) {
+      return `https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=${trackingNumber}`;
+    }
+    if (carrierLower.includes('chronopost')) {
+      return `https://www.chronopost.fr/tracking-no-cms/suivi-page?liession=${trackingNumber}`;
+    }
+    return null;
+  };
+
+  const finalTrackingUrl = getTrackingUrl();
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #E91E63; margin: 0;">Éditions Cerises d'Hiver</h1>
+      </div>
+      
+      <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <h2 style="color: #2e7d32; margin-top: 0;">📦 Votre commande est en route !</h2>
+        <p>Bonjour ${customerFirstName},</p>
+        <p>Bonne nouvelle ! Votre commande a été expédiée et est en chemin vers vous.</p>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <table style="width: 100%;">
+          <tr>
+            <td style="padding: 8px 0;"><strong>Référence de commande :</strong></td>
+            <td style="text-align: right;">${reference}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0;"><strong>Transporteur :</strong></td>
+            <td style="text-align: right;">${carrier}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0;"><strong>Numéro de suivi :</strong></td>
+            <td style="text-align: right; font-family: monospace; font-size: 1.1em;">${trackingNumber}</td>
+          </tr>
+          ${estimatedDelivery ? `
+          <tr>
+            <td style="padding: 8px 0;"><strong>Livraison estimée :</strong></td>
+            <td style="text-align: right; color: #2e7d32; font-weight: bold;">${estimatedDelivery}</td>
+          </tr>
+          ` : ''}
+        </table>
+      </div>
+
+      ${finalTrackingUrl ? `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <a href="${finalTrackingUrl}" style="display: inline-block; background: #E91E63; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+          📍 Suivre mon colis
+        </a>
+      </div>
+      ` : ''}
+
+      <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <p style="margin: 0;"><strong>💡 Conseil :</strong> Gardez ce numéro de suivi précieusement. Il vous permettra de suivre votre colis jusqu'à sa livraison.</p>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9em;">
+        <p>Des questions ? Contactez-nous à <a href="mailto:${MERCHANT_EMAIL}" style="color: #E91E63;">${MERCHANT_EMAIL}</a></p>
+        <p>Éditions Cerises d'Hiver</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const { data: emailData, error } = await resend.emails.send({
+      from: `Éditions Cerises d'Hiver <${FROM_EMAIL}>`,
+      to: customerEmail,
+      subject: `📦 Votre commande ${reference} a été expédiée !`,
+      html,
+    });
+
+    if (error) {
+      console.error('Error sending shipping email:', error);
+      return { success: false, error };
+    }
+
+    console.log('Shipping email sent:', emailData);
+    return { success: true, data: emailData };
+  } catch (error) {
+    console.error('Error sending shipping email:', error);
+    return { success: false, error };
+  }
+}
