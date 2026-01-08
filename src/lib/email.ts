@@ -359,6 +359,10 @@ interface ShippingEmailData {
   carrier: string; // e.g., "La Poste", "Colissimo", "Mondial Relay"
   trackingUrl?: string;
   estimatedDelivery?: string; // e.g., "12-14 décembre 2025"
+  invoicePdf?: {
+    content: string; // Base64 encoded PDF content
+    filename?: string; // Optional custom filename, defaults to "facture-{reference}.pdf"
+  };
 }
 
 export async function sendShippingEmail(data: ShippingEmailData) {
@@ -444,12 +448,23 @@ export async function sendShippingEmail(data: ShippingEmailData) {
     </html>
   `;
 
+  // Prepare attachments if invoice PDF is provided
+  const attachments = data.invoicePdf
+    ? [
+        {
+          filename: data.invoicePdf.filename || `facture-${reference}.pdf`,
+          content: data.invoicePdf.content,
+        },
+      ]
+    : undefined;
+
   try {
     const { data: emailData, error } = await resend.emails.send({
       from: `Éditions Cerises d'Hiver <${FROM_EMAIL}>`,
       to: customerEmail,
       subject: `📦 Votre commande ${reference} a été expédiée !`,
       html,
+      attachments,
     });
 
     if (error) {

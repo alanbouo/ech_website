@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { reference, customerEmail, customerFirstName, trackingNumber, carrier, trackingUrl, estimatedDelivery } = body;
+    const { reference, customerEmail, customerFirstName, trackingNumber, carrier, trackingUrl, estimatedDelivery, invoicePdf } = body;
 
     // Validate required fields
     if (!reference || !customerEmail || !customerFirstName || !trackingNumber || !carrier) {
@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       carrier,
       trackingUrl,
       estimatedDelivery,
+      invoicePdf,
     });
 
     if (result.success) {
