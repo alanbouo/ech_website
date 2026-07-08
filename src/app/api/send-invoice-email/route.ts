@@ -8,16 +8,20 @@ import { sendInvoiceEmail } from '@/lib/email';
 //   reference,            // référence de commande (requis)
 //   customerEmail,        // email du client (requis)
 //   customerFirstName,    // prénom du client (requis)
-//   invoiceUrl?,          // lien consultable vers la facture (ex: InvoicePlane guest URL)
+//   invoiceUrlKey?,       // clé de la facture invitée InvoicePlane (url_key). Suffit à
+//                         //   construire le lien consultable ET le PDF joint, à partir de
+//                         //   INVOICEPLANE_BASE_URL. Recommandé.
+//   invoiceUrl?,          // lien consultable explicite (prioritaire sur celui déduit de invoiceUrlKey)
 //   invoiceNumber?,       // numéro de facture (ex: "2026-0042")
 //   amount?,              // montant TTC
 //   issueDate?,           // date d'émission (ex: "8 juillet 2026")
 //   invoicePdf?,          // { content: base64, filename? } — PDF déjà encodé
-//   pdfUrl?,              // URL à télécharger pour joindre le PDF (ex: InvoicePlane)
+//   pdfUrl?,              // URL explicite à télécharger pour joindre le PDF
 //   pdfAuthHeader?        // valeur d'un header Authorization pour récupérer pdfUrl (optionnel)
 // }
 //
-// Il faut fournir au moins invoiceUrl OU un moyen d'obtenir le PDF (invoicePdf ou pdfUrl).
+// Il faut fournir au moins un moyen d'identifier la facture :
+// invoiceUrlKey, invoiceUrl, invoicePdf ou pdfUrl.
 export async function POST(request: NextRequest) {
   try {
     // Verify secret key (pas de valeur par défaut : l'endpoint refuse si API_SECRET n'est pas configuré)
@@ -37,6 +41,7 @@ export async function POST(request: NextRequest) {
       reference,
       customerEmail,
       customerFirstName,
+      invoiceUrlKey,
       invoiceUrl,
       invoiceNumber,
       amount,
@@ -54,19 +59,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // À partir de la clé InvoicePlane (url_key), on déduit le lien consultable et l'URL du PDF.
+    let resolvedInvoiceUrl = invoiceUrl;
+    let resolvedPdfUrl = pdfUrl;
+    if (invoiceUrlKey) {
+      const baseUrl = process.env.INVOICEPLANE_BASE_URL;
+      if (!baseUrl) {
+        return NextResponse.json(
+          { error: 'INVOICEPLANE_BASE_URL is not configured but invoiceUrlKey was provided' },
+          { status: 500 }
+        );
+      }
+      const base = baseUrl.replace(/\/+$/, '');
+      resolvedInvoiceUrl = resolvedInvoiceUrl || `${base}/index.php/guest/view/invoice/${invoiceUrlKey}`;
+      resolvedPdfUrl = resolvedPdfUrl || `${base}/index.php/guest/view/generate_invoice_pdf/${invoiceUrlKey}`;
+    }
+
     // Il faut au moins un lien ou un PDF (fourni ou à télécharger)
-    if (!invoiceUrl && !invoicePdf && !pdfUrl) {
+    if (!resolvedInvoiceUrl && !invoicePdf && !resolvedPdfUrl) {
       return NextResponse.json(
-        { error: 'Provide at least one of: invoiceUrl, invoicePdf, or pdfUrl' },
+        { error: 'Provide at least one of: invoiceUrlKey, invoiceUrl, invoicePdf, or pdfUrl' },
         { status: 400 }
       );
     }
 
-    // Si une URL de PDF est fournie (ex: InvoicePlane), on la télécharge et on l'encode en base64
+    // Si une URL de PDF est disponible (ex: InvoicePlane), on la télécharge et on l'encode en base64
     let resolvedPdf = invoicePdf;
-    if (!resolvedPdf && pdfUrl) {
+    if (!resolvedPdf && resolvedPdfUrl) {
       try {
-        const pdfResponse = await fetch(pdfUrl, {
+        const pdfResponse = await fetch(resolvedPdfUrl, {
           headers: pdfAuthHeader ? { Authorization: pdfAuthHeader } : undefined,
         });
 
@@ -92,7 +113,7 @@ export async function POST(request: NextRequest) {
       reference,
       customerEmail,
       customerFirstName,
-      invoiceUrl,
+      invoiceUrl: resolvedInvoiceUrl,
       invoiceNumber,
       amount: amount !== undefined ? Number(amount) : undefined,
       issueDate,
