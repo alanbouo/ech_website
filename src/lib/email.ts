@@ -508,55 +508,72 @@ export async function sendInvoiceEmail(data: InvoiceEmailData) {
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #E91E63; margin: 0;">Éditions Cerises d'Hiver</h1>
-      </div>
+    <body style="font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #3a3a3a; background: #faf7f8; margin: 0; padding: 24px 0;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
 
-      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-        <h2 style="color: #333; margin-top: 0;">🧾 Votre facture</h2>
-        <p>Bonjour ${customerFirstName},</p>
-        <p>Veuillez trouver ${data.invoicePdf ? 'ci-joint' : 'ci-dessous le lien vers'} votre facture concernant votre commande.</p>
-      </div>
+        <!-- Bandeau de marque -->
+        <div style="background: linear-gradient(135deg, #E91E63 0%, #c2185b 100%); padding: 32px 30px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 22px; letter-spacing: 0.5px;">Éditions Cerises d'Hiver</h1>
+          <p style="color: #ffe3ee; margin: 6px 0 0 0; font-size: 13px;">Votre facture est prête 🍒</p>
+        </div>
 
-      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-        <table style="width: 100%;">
-          <tr>
-            <td style="padding: 8px 0;"><strong>Référence de commande :</strong></td>
-            <td style="text-align: right;">${reference}</td>
-          </tr>
-          ${invoiceNumber ? `
-          <tr>
-            <td style="padding: 8px 0;"><strong>Numéro de facture :</strong></td>
-            <td style="text-align: right;">${invoiceNumber}</td>
-          </tr>
+        <div style="padding: 32px 30px;">
+          <p style="font-size: 16px; margin: 0 0 16px 0;">Bonjour ${customerFirstName},</p>
+          <p style="margin: 0 0 16px 0;">
+            Merci pour votre confiance et votre commande auprès des Éditions Cerises d'Hiver.
+            ${data.invoicePdf
+              ? 'Vous trouverez votre facture <strong>en pièce jointe</strong> de cet email, au format PDF.'
+              : 'Vous pouvez consulter et télécharger votre facture en cliquant sur le bouton ci-dessous.'}
+          </p>
+          <p style="margin: 0 0 24px 0;">Elle récapitule les détails de votre achat ci-dessous.</p>
+
+          <!-- Récapitulatif -->
+          <div style="background: #fdf2f6; border: 1px solid #f8d7e3; padding: 20px 24px; border-radius: 10px; margin-bottom: 28px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 6px 0; color: #6b6b6b;">Référence de commande</td>
+                <td style="padding: 6px 0; text-align: right; font-weight: 600;">${reference}</td>
+              </tr>
+              ${invoiceNumber ? `
+              <tr>
+                <td style="padding: 6px 0; color: #6b6b6b;">Numéro de facture</td>
+                <td style="padding: 6px 0; text-align: right; font-weight: 600;">${invoiceNumber}</td>
+              </tr>
+              ` : ''}
+              ${issueDate ? `
+              <tr>
+                <td style="padding: 6px 0; color: #6b6b6b;">Date d'émission</td>
+                <td style="padding: 6px 0; text-align: right; font-weight: 600;">${issueDate}</td>
+              </tr>
+              ` : ''}
+              ${amount !== undefined ? `
+              <tr>
+                <td style="padding: 12px 0 0 0; color: #6b6b6b; border-top: 1px solid #f3c6d6;">Montant TTC</td>
+                <td style="padding: 12px 0 0 0; text-align: right; font-size: 1.3em; color: #E91E63; font-weight: 700; border-top: 1px solid #f3c6d6;">€${amount.toFixed(2)}</td>
+              </tr>
+              ` : ''}
+            </table>
+          </div>
+
+          ${invoiceUrl ? `
+          <div style="text-align: center; margin-bottom: 28px;">
+            <a href="${invoiceUrl}" style="display: inline-block; background: #E91E63; color: #ffffff; padding: 14px 34px; text-decoration: none; border-radius: 30px; font-weight: 600; font-size: 15px;">
+              Consulter ma facture
+            </a>
+            <p style="color: #9a9a9a; font-size: 12px; margin: 12px 0 0 0;">Ce lien vous permet de consulter votre facture à tout moment.</p>
+          </div>
           ` : ''}
-          ${issueDate ? `
-          <tr>
-            <td style="padding: 8px 0;"><strong>Date d'émission :</strong></td>
-            <td style="text-align: right;">${issueDate}</td>
-          </tr>
-          ` : ''}
-          ${amount !== undefined ? `
-          <tr>
-            <td style="padding: 8px 0;"><strong>Montant TTC :</strong></td>
-            <td style="text-align: right; font-size: 1.2em; color: #E91E63; font-weight: bold;">€${amount.toFixed(2)}</td>
-          </tr>
-          ` : ''}
-        </table>
-      </div>
 
-      ${invoiceUrl ? `
-      <div style="text-align: center; margin-bottom: 20px;">
-        <a href="${invoiceUrl}" style="display: inline-block; background: #E91E63; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-          🧾 Consulter ma facture
-        </a>
-      </div>
-      ` : ''}
+          <p style="margin: 0 0 4px 0;">Nous vous remercions chaleureusement et espérons que votre lecture vous enchantera. 📚</p>
+          <p style="margin: 0;">Bien à vous,<br><strong>L'équipe des Éditions Cerises d'Hiver</strong></p>
+        </div>
 
-      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9em;">
-        <p>Des questions ? Contactez-nous à <a href="mailto:${MERCHANT_EMAIL}" style="color: #E91E63;">${MERCHANT_EMAIL}</a></p>
-        <p>Éditions Cerises d'Hiver</p>
+        <!-- Pied de page -->
+        <div style="background: #faf7f8; padding: 22px 30px; text-align: center; border-top: 1px solid #f0e6ea; color: #8a8a8a; font-size: 13px;">
+          <p style="margin: 0 0 4px 0;">Une question sur votre facture ? Écrivez-nous à <a href="mailto:${MERCHANT_EMAIL}" style="color: #E91E63; text-decoration: none;">${MERCHANT_EMAIL}</a></p>
+          <p style="margin: 0;">Éditions Cerises d'Hiver</p>
+        </div>
+
       </div>
     </body>
     </html>
