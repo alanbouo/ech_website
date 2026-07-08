@@ -479,3 +479,117 @@ export async function sendShippingEmail(data: ShippingEmailData) {
     return { success: false, error };
   }
 }
+
+// ============================================
+// INVOICE EMAIL
+// ============================================
+
+interface InvoiceEmailData {
+  reference: string;
+  customerEmail: string;
+  customerFirstName: string;
+  invoiceUrl?: string; // Lien consultable vers la facture (ex: InvoicePlane guest URL)
+  invoiceNumber?: string; // Numéro de facture (ex: "2026-0042")
+  amount?: number; // Montant total TTC de la facture
+  issueDate?: string; // Date d'émission (ex: "8 juillet 2026")
+  invoicePdf?: {
+    content: string; // Base64 encoded PDF content
+    filename?: string; // Optional custom filename, defaults to "facture-{reference}.pdf"
+  };
+}
+
+export async function sendInvoiceEmail(data: InvoiceEmailData) {
+  const { reference, customerEmail, customerFirstName, invoiceUrl, invoiceNumber, amount, issueDate } = data;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #E91E63; margin: 0;">Éditions Cerises d'Hiver</h1>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <h2 style="color: #333; margin-top: 0;">🧾 Votre facture</h2>
+        <p>Bonjour ${customerFirstName},</p>
+        <p>Veuillez trouver ${data.invoicePdf ? 'ci-joint' : 'ci-dessous le lien vers'} votre facture concernant votre commande.</p>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <table style="width: 100%;">
+          <tr>
+            <td style="padding: 8px 0;"><strong>Référence de commande :</strong></td>
+            <td style="text-align: right;">${reference}</td>
+          </tr>
+          ${invoiceNumber ? `
+          <tr>
+            <td style="padding: 8px 0;"><strong>Numéro de facture :</strong></td>
+            <td style="text-align: right;">${invoiceNumber}</td>
+          </tr>
+          ` : ''}
+          ${issueDate ? `
+          <tr>
+            <td style="padding: 8px 0;"><strong>Date d'émission :</strong></td>
+            <td style="text-align: right;">${issueDate}</td>
+          </tr>
+          ` : ''}
+          ${amount !== undefined ? `
+          <tr>
+            <td style="padding: 8px 0;"><strong>Montant TTC :</strong></td>
+            <td style="text-align: right; font-size: 1.2em; color: #E91E63; font-weight: bold;">€${amount.toFixed(2)}</td>
+          </tr>
+          ` : ''}
+        </table>
+      </div>
+
+      ${invoiceUrl ? `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <a href="${invoiceUrl}" style="display: inline-block; background: #E91E63; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+          🧾 Consulter ma facture
+        </a>
+      </div>
+      ` : ''}
+
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9em;">
+        <p>Des questions ? Contactez-nous à <a href="mailto:${MERCHANT_EMAIL}" style="color: #E91E63;">${MERCHANT_EMAIL}</a></p>
+        <p>Éditions Cerises d'Hiver</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  // Prepare attachments if invoice PDF is provided
+  const attachments = data.invoicePdf
+    ? [
+        {
+          filename: data.invoicePdf.filename || `facture-${reference}.pdf`,
+          content: data.invoicePdf.content,
+        },
+      ]
+    : undefined;
+
+  try {
+    const { data: emailData, error } = await resend.emails.send({
+      from: `Éditions Cerises d'Hiver <${FROM_EMAIL}>`,
+      to: customerEmail,
+      subject: `🧾 Votre facture${invoiceNumber ? ` ${invoiceNumber}` : ''} - Commande ${reference}`,
+      html,
+      attachments,
+    });
+
+    if (error) {
+      console.error('Error sending invoice email:', error);
+      return { success: false, error };
+    }
+
+    console.log('Invoice email sent:', emailData);
+    return { success: true, data: emailData };
+  } catch (error) {
+    console.error('Error sending invoice email:', error);
+    return { success: false, error };
+  }
+}
