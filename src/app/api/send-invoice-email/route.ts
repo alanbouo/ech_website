@@ -15,6 +15,7 @@ import { sendInvoiceEmail } from '@/lib/email';
 //   invoiceNumber?,       // numéro de facture (ex: "2026-0042")
 //   amount?,              // montant TTC
 //   issueDate?,           // date d'émission (ex: "8 juillet 2026")
+//   personalMessage?,     // message personnalisé optionnel affiché dans un encart dédié
 //   invoicePdf?,          // { content: base64, filename? } — PDF déjà encodé
 //   pdfUrl?,              // URL explicite à télécharger pour joindre le PDF
 //   pdfAuthHeader?        // valeur d'un header Authorization pour récupérer pdfUrl (optionnel)
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
       invoiceNumber,
       amount,
       issueDate,
+      personalMessage,
       invoicePdf,
       pdfUrl,
       pdfAuthHeader,
@@ -117,6 +119,7 @@ export async function POST(request: NextRequest) {
       invoiceNumber,
       amount: amount !== undefined ? Number(amount) : undefined,
       issueDate,
+      personalMessage,
       invoicePdf: resolvedPdf,
     });
 

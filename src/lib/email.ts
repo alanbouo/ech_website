@@ -492,14 +492,26 @@ interface InvoiceEmailData {
   invoiceNumber?: string; // Numéro de facture (ex: "2026-0042")
   amount?: number; // Montant total TTC de la facture
   issueDate?: string; // Date d'émission (ex: "8 juillet 2026")
+  personalMessage?: string; // Message personnalisé optionnel affiché dans un encart dédié
   invoicePdf?: {
     content: string; // Base64 encoded PDF content
     filename?: string; // Optional custom filename, defaults to "facture-{reference}.pdf"
   };
 }
 
+// Échappe le HTML et convertit les retours à la ligne en <br> pour un affichage sûr
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/\r?\n/g, '<br>');
+}
+
 export async function sendInvoiceEmail(data: InvoiceEmailData) {
-  const { reference, customerEmail, customerFirstName, invoiceUrl, invoiceNumber, amount, issueDate } = data;
+  const { reference, customerEmail, customerFirstName, invoiceUrl, invoiceNumber, amount, issueDate, personalMessage } = data;
 
   const html = `
     <!DOCTYPE html>
@@ -526,6 +538,13 @@ export async function sendInvoiceEmail(data: InvoiceEmailData) {
               : 'Vous pouvez consulter et télécharger votre facture en cliquant sur le bouton ci-dessous.'}
           </p>
           <p style="margin: 0 0 24px 0;">Elle récapitule les détails de votre achat ci-dessous.</p>
+
+          ${personalMessage ? `
+          <!-- Message personnalisé -->
+          <div style="background: #fff8e1; border-left: 4px solid #E91E63; padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 28px;">
+            <p style="margin: 0; font-style: italic; color: #5a5a5a;">${escapeHtml(personalMessage)}</p>
+          </div>
+          ` : ''}
 
           <!-- Récapitulatif -->
           <div style="background: #fdf2f6; border: 1px solid #f8d7e3; padding: 20px 24px; border-radius: 10px; margin-bottom: 28px;">
