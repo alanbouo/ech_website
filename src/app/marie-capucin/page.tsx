@@ -1,12 +1,30 @@
+import type { Metadata } from 'next';
 import { getBooksByAuthor } from '@/data/books';
+import { pageMetadata, SITE_NAME, SITE_URL } from '@/lib/seo';
 import BookCard from '@/components/BookCard';
 import Breadcrumb from '@/components/Breadcrumb';
 
+export const metadata: Metadata = pageMetadata({
+  path: '/marie-capucin',
+  title: "Marie Capucin, auteure — Éditions Cerises d'Hiver",
+  description:
+    "Marie Capucin est une auteure française dont les romans explorent la famille, l'identité et les secrets. Ses livres sont publiés aux Éditions Cerises d'Hiver.",
+});
+
 export default function MarieCapucinPage() {
   const books = getBooksByAuthor('marie-capucin');
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Marie Capucin',
+    url: `${SITE_URL}/marie-capucin`,
+    nationality: 'Française',
+    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Breadcrumb
         items={[
           { label: 'Accueil', href: '/' },

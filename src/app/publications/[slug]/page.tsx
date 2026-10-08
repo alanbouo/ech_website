@@ -1,9 +1,11 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { books, getBookBySlug } from '@/data/books';
 import Breadcrumb from '@/components/Breadcrumb';
 import AddToCartButton from '@/components/AddToCartButton';
+import { pageMetadata, SITE_NAME, SITE_URL } from '@/lib/seo';
 
 interface BookPageProps {
   params: { slug: string };
@@ -15,12 +17,42 @@ export function generateStaticParams() {
   }));
 }
 
+export function generateMetadata({ params }: BookPageProps): Metadata {
+  const book = getBookBySlug(params.slug);
+  if (!book) return { title: 'Livre introuvable' };
+  return pageMetadata({
+    path: `/publications/${book.slug}`,
+    title: `${book.title} — ${book.author} | ${SITE_NAME}`,
+    description: book.description,
+    image: book.image,
+  });
+}
+
 export default function BookPage({ params }: BookPageProps) {
   const book = getBookBySlug(params.slug);
 
   if (!book) {
     notFound();
   }
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    name: book.title,
+    url: `${SITE_URL}/publications/${book.slug}`,
+    description: book.description,
+    image: `${SITE_URL}${book.image}`,
+    inLanguage: 'fr',
+    author: { '@type': 'Person', name: book.author },
+    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    offers: {
+      '@type': 'Offer',
+      price: book.price.toFixed(2),
+      priceCurrency: 'EUR',
+      availability: book.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url: `${SITE_URL}/publications/${book.slug}`,
+    },
+  };
 
   // Parse markdown-style bold text
   const formatText = (text: string) => {
@@ -45,6 +77,7 @@ export default function BookPage({ params }: BookPageProps) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Breadcrumb
         items={[
           { label: 'Accueil', href: '/' },
@@ -92,9 +125,7 @@ export default function BookPage({ params }: BookPageProps) {
                 <span className="ml-2">Étiquettes : </span>
                 {book.tags.map((tag, index) => (
                   <span key={tag}>
-                    <Link href={`/tag/${tag}`} className="text-primary hover:text-primary-dark">
-                      {tag}
-                    </Link>
+                    <span>{tag}</span>
                     {index < book.tags.length - 1 && ', '}
                   </span>
                 ))}

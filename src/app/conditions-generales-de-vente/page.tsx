@@ -1,4 +1,12 @@
+import type { Metadata } from 'next';
 import Breadcrumb from '@/components/Breadcrumb';
+import { pageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = pageMetadata({
+  path: '/conditions-generales-de-vente',
+  title: "Conditions générales de vente — Éditions Cerises d'Hiver",
+  description: "Conditions générales de vente des Éditions Cerises d'Hiver : commande, paiement, livraison, rétractation.",
+});
 
 export default function CGVPage() {
   return (

@@ -1,8 +1,28 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import BookCard from '@/components/BookCard';
+import { books } from '@/data/books';
+import { pageMetadata, SITE_NAME, SITE_URL } from '@/lib/seo';
+
+export const metadata: Metadata = pageMetadata({
+  path: '/',
+  title: "Éditions Cerises d'Hiver — Maison d'édition indépendante",
+  description:
+    "Éditions Cerises d'Hiver, maison d'édition indépendante : romans et littérature contemporaine, dont les livres de Marie Capucin.",
+});
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: "Maison d'édition indépendante - Romans et littérature",
+};
 
 export default function Home() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Hero Section */}
       <section className="text-center mb-16">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
@@ -17,6 +37,16 @@ export default function Home() {
         >
           Découvrir nos publications
         </Link>
+      </section>
+
+      {/* Publications */}
+      <section className="mt-4 mb-4">
+        <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Nos publications</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {books.map((book) => (
+            <BookCard key={book.id} book={book} />
+          ))}
+        </div>
       </section>
 
       {/* Author Section */}
