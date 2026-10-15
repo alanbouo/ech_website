@@ -36,3 +36,4 @@ next-env.d.ts
 
 # Scripts with sensitive data
 send-invoice-email.js
+.git-rewrite/*
